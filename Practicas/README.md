@@ -1,3 +1,3 @@
 # Prácticas
-In this folder we save the theorical lectures from our university.
+In this folder we save some homeworks from our university.
 
