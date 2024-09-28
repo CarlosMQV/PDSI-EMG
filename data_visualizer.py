@@ -30,6 +30,12 @@ df = df.drop(columns=[df.columns[8], df.columns[9]])
 c_estimulo = df.columns[-1]
 df['bloque'] = (df[c_estimulo] != df[c_estimulo].shift()).cumsum()
 
+#Info que nos servirá después para los distintos dataframes que crearemos:
+# Definimos el número de sensores (son 14)
+num_sensores = 14
+# Definimos el número total de bloques
+num_bloques = df['bloque'].max()
+
 #---------------------------------------------------------------------------------
 
 # Visualización específica. Se ven las señales de los 7 agarres de un solo sensor.
@@ -58,13 +64,8 @@ plt.show()
 
 #---------------------------------------------------------------------------------
 
-# Definimos el número de sensores (son 14)
-num_sensores = 14
 # Creamos una lista para almacenar las filas del DataFrame global
 filas_df_global = []
-# Definimos el número total de bloques
-num_bloques = df['bloque'].max()
-
 # Iterar sobre los intervalos de 24 bloques
 for i in range(0, num_bloques, 24):
     # Creamos una lista para almacenar los DataFrames de una fila
@@ -87,6 +88,7 @@ for i in range(0, num_bloques, 24):
 # Crear el DataFrame global con las filas de DataFrames de sensores y la columna del estímulo
 columnas = [f'Sensor_{i+1}' for i in range(num_sensores)] + ['Stimulus']
 df_global = pd.DataFrame(filas_df_global, columns=columnas)
+
 # Es importante mencionar que esta df_global tiene como elementos un conjunto de datos.
 # Y aunque pueden graficar las señales, se ha perdido la información sobre los "0", es decir el no agarre.
 # Por lo tanto, un elemento contiene 12 repeticiones de un tipo de agarre de un tipo de sensor.
@@ -103,4 +105,40 @@ df_global = pd.DataFrame(filas_df_global, columns=columnas)
 
 #---------------------------------------------------------------------------------
 
+# Creamos una lista para almacenar las filas de df_pure
+filas_df_pure = []
+# Iterar sobre los conjuntos de 24 bloques
+for i in range(0, num_bloques, 24):
+    # Filtrar los 24 bloques actuales
+    df_bloques = df[df['bloque'].between(i + 1, i + 24)]
+    # Filtrar los 12 bloques donde el tipo de agarre es 0
+    df_agarre_0 = df_bloques[df_bloques['stimulus'] == 0]
+    # Filtrar los 12 bloques donde el tipo de agarre es diferente a 0 (agarre característico)
+    df_agarre_n = df_bloques[df_bloques['stimulus'] != 0]
+    # Obtener el tipo de agarre característico (debería ser un solo número)
+    agarre_n = df_agarre_n['stimulus'].unique()[0]  # Se asume que solo hay un número diferente de 0
+    # Crear una lista para la fila de agarre 0 (primera fila)
+    fila_agarre_0 = []
+    # Crear una lista para la fila de agarre n (segunda fila)
+    fila_agarre_n = []
+    # Iterar sobre cada sensor (las primeras 14 columnas)
+    for sensor in range(num_sensores):
+        # Combinar los valores de los 12 bloques del agarre 0 en un solo DataFrame
+        df_sensor_0 = df_agarre_0.iloc[:, sensor].reset_index(drop=True)
+        # Añadir este DataFrame a la fila de agarre 0
+        fila_agarre_0.append(df_sensor_0)
+        
+        # Combinar los valores de los 12 bloques del agarre n en un solo DataFrame
+        df_sensor_n = df_agarre_n.iloc[:, sensor].reset_index(drop=True)
+        # Añadir este DataFrame a la fila de agarre n
+        fila_agarre_n.append(df_sensor_n)
+    # Añadir el valor del agarre a la columna 15
+    fila_agarre_0.append(0)  # Agarre 0
+    fila_agarre_n.append(agarre_n)  # Agarre n
+    # Añadir las dos filas al DataFrame final
+    filas_df_pure.append(fila_agarre_0)
+    filas_df_pure.append(fila_agarre_n)
 
+# Crear el DataFrame final df_pure con 14 columnas de sensores y la columna del agarre
+columnas = [f'Sensor_{i+1}' for i in range(num_sensores)] + ['Stimulus']
+df_pure = pd.DataFrame(filas_df_pure, columns=columnas)
