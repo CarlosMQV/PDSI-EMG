@@ -160,7 +160,12 @@ df_pure = pd.DataFrame(filas_df_pure, columns=columnas)
 
 #---------------------------------------------------------------------------------
 
-
+# Como info adicional, si se observa la señal del primer sensor para el primer tipo de agarre
+# extrayendo los datos [0,0] de df_global (el código está comentado arriba) y luego se generan
+# las gráficas de df_pure en la ubicación [0,0] y luego la gráfica en [1,0], se podrá ver
+# que estas dos últimas juntas dan la primera, y es lo esperado pues una parte representa
+# la posición sin agarre, y la otra del agarre característico, de modo que juntas forman la
+# señal completa.
 
 
 
