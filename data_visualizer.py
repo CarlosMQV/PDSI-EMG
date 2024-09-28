@@ -95,7 +95,12 @@ df_global = pd.DataFrame(filas_df_global, columns=columnas)
 # Pueden extraerse datos con, por ejemplo, df_global.iloc[0, 0] (fila 1, columna 1)
 # En este df, por ejemplo, pueden sacarse características por cada elemento, ya que son señales completas.
 
-#---------------------------------------------------------------------------------
+# Puedes observar de manera independiente estas señales con:
+# fig, axs = plt.subplots(1, 1, figsize=(30, 10))
+# val_independiente = df_global.iloc[9, 9] # [0,0] es fila 1 columna 1
+# axs.plot(val_independiente.index, val_independiente)
+# plt.show()
 
+#---------------------------------------------------------------------------------
 
 
