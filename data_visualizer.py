@@ -96,12 +96,6 @@ def create_df_global(df):
     # Este dataframe puede servir si solo interesa cada "serie de repeticiones" y no cuando hay agarre.
     # Pueden extraerse datos con, por ejemplo, df_global.iloc[0, 0] (fila 1, columna 1)
     # En este df, por ejemplo, pueden sacarse características por cada elemento, ya que son señales completas.
-    
-    # Puedes observar de manera independiente estas señales con:
-    # fig, axs = plt.subplots(1, 1, figsize=(30, 10))
-    # val_independiente = df_global.iloc[0, 0] # [0,0] es fila 1 columna 1
-    # axs.plot(val_independiente.index, val_independiente)
-    # plt.show()
 
 #---------------------------------------------------------------------------------
 
@@ -155,12 +149,6 @@ def create_df_pure(df):
     # No existen aquí los periodos de descanso. Una señal o no tiene agarre, o tiene solo un agarre.
     # Podría probarse sacar características de aquí, siendo estas señales de agarre puro.
     # A diferencia de df_global, que en un conjunto de datos combina el no agarre con un tipo de agarre.
-    
-    # Puedes observar de manera independiente estas señales con:
-    # fig, axs = plt.subplots(1, 1, figsize=(30, 10))
-    # val_pure = df_pure.iloc[0, 0] # [0,0] es fila 1 columna 1
-    # axs.plot(val_pure.index, val_pure)
-    # plt.show()
 
 #---------------------------------------------------------------------------------
 
