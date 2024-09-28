@@ -166,3 +166,4 @@ df_pure = pd.DataFrame(filas_df_pure, columns=columnas)
 # que estas dos últimas juntas dan la primera, y es lo esperado pues una parte representa
 # la posición sin agarre, y la otra del agarre característico, de modo que juntas forman la
 # señal completa.
+
