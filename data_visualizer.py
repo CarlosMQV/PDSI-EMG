@@ -99,7 +99,7 @@ df_global = pd.DataFrame(filas_df_global, columns=columnas)
 
 # Puedes observar de manera independiente estas señales con:
 # fig, axs = plt.subplots(1, 1, figsize=(30, 10))
-# val_independiente = df_global.iloc[9, 9] # [0,0] es fila 1 columna 1
+# val_independiente = df_global.iloc[0, 0] # [0,0] es fila 1 columna 1
 # axs.plot(val_independiente.index, val_independiente)
 # plt.show()
 
@@ -142,3 +142,25 @@ for i in range(0, num_bloques, 24):
 # Crear el DataFrame final df_pure con 14 columnas de sensores y la columna del agarre
 columnas = [f'Sensor_{i+1}' for i in range(num_sensores)] + ['Stimulus']
 df_pure = pd.DataFrame(filas_df_pure, columns=columnas)
+
+# El dataframe df_pure genera, de una muestra de doce repeticiones, dos conjuntos de datos.
+# El primer conjunto de datos es una fusión de todos los estímulos 0 de los primeros 24 bloques.
+# El segundo conjunto de datos es una fusión de los estímulos no 0 de los mismos 24 bloques.
+# Entonces tenemos una señal de solo estímulos 0 o solo estímulos de número característico.
+# Esto es lo contrario de df_global, porque exhibe en una señal solo un tipo de agarre.
+# No existen aquí los periodos de descanso. Una señal o no tiene agarre, o tiene solo un agarre.
+# Podría probarse sacar características de aquí, siendo estas señales de agarre puro.
+# A diferencia de df_global, que en un conjunto de datos combina el no agarre con un tipo de agarre.
+
+# Puedes observar de manera independiente estas señales con:
+# fig, axs = plt.subplots(1, 1, figsize=(30, 10))
+# val_pure = df_pure.iloc[0, 0] # [0,0] es fila 1 columna 1
+# axs.plot(val_pure.index, val_pure)
+# plt.show()
+
+#---------------------------------------------------------------------------------
+
+
+
+
+
