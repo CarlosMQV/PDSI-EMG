@@ -167,16 +167,3 @@ def simple_viewer(df_type,row=0,column=0):
 # que estas dos últimas juntas dan la primera, y es lo esperado pues una parte representa
 # la posición sin agarre, y la otra del agarre característico, de modo que juntas forman la
 # señal completa.
-
-# Funciones de ejemplo:
-
-df = lectura()
-raw_viewer(df,0)
-
-df_global = create_df_global(df)
-simple_viewer(df_global,row=0,column=0)
-
-df_pure = create_df_pure(df)
-simple_viewer(df_pure,row=0,column=0)
-simple_viewer(df_pure,row=1,column=0)
-
