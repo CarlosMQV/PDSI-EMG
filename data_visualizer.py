@@ -93,7 +93,9 @@ df_global = pd.DataFrame(filas_df_global, columns=columnas)
 # Pero ya no se indica, dentro de esas repeticiones, cuándo hay agarre y cuándo no.
 # Este dataframe puede servir si solo interesa cada "serie de repeticiones" y no cuando hay agarre.
 # Pueden extraerse datos con, por ejemplo, df_global.iloc[0, 0] (fila 1, columna 1)
+# En este df, por ejemplo, pueden sacarse características por cada elemento, ya que son señales completas.
 
 #---------------------------------------------------------------------------------
+
 
 
