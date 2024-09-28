@@ -17,8 +17,15 @@ df4 = pd.read_parquet('datasets/ninapro/DB6_s2_a/S2_D2_T2.parquet', engine='pyar
 df5 = pd.read_parquet('datasets/ninapro/DB6_s2_a/S2_D3_T1.parquet', engine='pyarrow')
 df6 = pd.read_parquet('datasets/ninapro/DB6_s2_a/S2_D3_T2.parquet', engine='pyarrow')
 df_s2 = pd.concat([df1, df2, df3, df4, df5, df6], ignore_index=True)
+#Eliminamos variables inútiles
+del df1
+del df2
+del df3
+del df4
+del df5
+del df6
 
 # Eliminamos las columnas 9 y 10
-df_s1 = df1.drop(columns=[df1.columns[8], df1.columns[9]])
-df_s2 = df2.drop(columns=[df2.columns[8], df2.columns[9]])
+df_s1 = df_s1.drop(columns=[df_s1.columns[8], df_s1.columns[9]])
+df_s2 = df_s2.drop(columns=[df_s2.columns[8], df_s2.columns[9]])
 
