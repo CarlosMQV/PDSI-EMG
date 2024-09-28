@@ -28,6 +28,7 @@ df = df.drop(columns=[df.columns[8], df.columns[9]])
 c_estimulo = df.columns[-1]
 df['bloque'] = (df[c_estimulo] != df[c_estimulo].shift()).cumsum()
 
+#---------------------------------------------------------------------------------
 # Visualización específica. Se ven las señales de los 7 agarres de un solo sensor.
 fig, axs = plt.subplots(4, 2, figsize=(30, 20))
 # Iterar sobre los 7 tipos de agarre
@@ -51,3 +52,34 @@ for i in range(7):
 plt.tight_layout()
 # Mostrar la figura
 plt.show()
+#---------------------------------------------------------------------------------
+
+# Definimos el número de sensores (son 14)
+num_sensores = 14
+# Creamos una lista para almacenar las filas del DataFrame global
+filas_df_global = []
+# Definimos el número total de bloques
+num_bloques = df['bloque'].max()
+
+# Iterar sobre los intervalos de 24 bloques
+for i in range(0, num_bloques, 24):
+    # Creamos una lista para almacenar los DataFrames de una fila
+    fila = []
+    # Filtramos los datos de los bloques correspondientes al intervalo actual
+    df_filtrado = df[df['bloque'].between(i + 1, i + 24)]
+    # Iteramos sobre cada sensor (las primeras 14 columnas)
+    for sensor in range(num_sensores):
+        # Crear un DataFrame para los valores del sensor en este rango de bloques
+        df_sensor = df_filtrado.iloc[:, sensor]
+        # Añadir este DataFrame a la fila
+        fila.append(df_sensor)
+    # Obtener el valor del estímulo (asumimos que todos los valores en el rango de bloques son iguales)
+    estimulo = df_filtrado['stimulus'].iloc[0]
+    # Añadir la fila con los DataFrames de los sensores y el estímulo
+    fila.append(estimulo)
+    # Añadir esta fila al DataFrame global
+    filas_df_global.append(fila)
+
+# Crear el DataFrame global con las filas de DataFrames de sensores y la columna del estímulo
+columnas = [f'Sensor_{i+1}' for i in range(num_sensores)] + ['Stimulus']
+df_global = pd.DataFrame(filas_df_global, columns=columnas)
