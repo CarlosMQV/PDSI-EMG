@@ -1,6 +1,8 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 
+#---------------------------------------------------------------------------------
+
 # Dataframes del sujeto 1
 df1 = pd.read_parquet('datasets/ninapro/DB6_s1_a/S1_D1_T1.parquet', engine='pyarrow')
 df2 = pd.read_parquet('datasets/ninapro/DB6_s1_a/S1_D1_T2.parquet', engine='pyarrow')
@@ -29,6 +31,7 @@ c_estimulo = df.columns[-1]
 df['bloque'] = (df[c_estimulo] != df[c_estimulo].shift()).cumsum()
 
 #---------------------------------------------------------------------------------
+
 # Visualización específica. Se ven las señales de los 7 agarres de un solo sensor.
 fig, axs = plt.subplots(4, 2, figsize=(30, 20))
 # Iterar sobre los 7 tipos de agarre
@@ -52,6 +55,7 @@ for i in range(7):
 plt.tight_layout()
 # Mostrar la figura
 plt.show()
+
 #---------------------------------------------------------------------------------
 
 # Definimos el número de sensores (son 14)
@@ -83,3 +87,13 @@ for i in range(0, num_bloques, 24):
 # Crear el DataFrame global con las filas de DataFrames de sensores y la columna del estímulo
 columnas = [f'Sensor_{i+1}' for i in range(num_sensores)] + ['Stimulus']
 df_global = pd.DataFrame(filas_df_global, columns=columnas)
+# Es importante mencionar que esta df_global tiene como elementos un conjunto de datos.
+# Y aunque pueden graficar las señales, se ha perdido la información sobre los "0", es decir el no agarre.
+# Por lo tanto, un elemento contiene 12 repeticiones de un tipo de agarre de un tipo de sensor.
+# Pero ya no se indica, dentro de esas repeticiones, cuándo hay agarre y cuándo no.
+# Este dataframe puede servir si solo interesa cada "serie de repeticiones" y no cuando hay agarre.
+# Pueden extraerse datos con, por ejemplo, df_global.iloc[0, 0] (fila 1, columna 1)
+
+#---------------------------------------------------------------------------------
+
+
