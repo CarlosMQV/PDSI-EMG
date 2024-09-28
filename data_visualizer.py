@@ -28,7 +28,7 @@ df = df.drop(columns=[df.columns[8], df.columns[9]])
 c_estimulo = df.columns[-1]
 df['bloque'] = (df[c_estimulo] != df[c_estimulo].shift()).cumsum()
 
-# Visualización específica. Se ve
+# Visualización específica. Se ven las señales de los 7 agarres de un solo sensor.
 fig, axs = plt.subplots(4, 2, figsize=(30, 20))
 # Iterar sobre los 7 tipos de agarre
 for i in range(7):
