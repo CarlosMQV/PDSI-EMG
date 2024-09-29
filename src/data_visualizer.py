@@ -29,6 +29,17 @@ def lectura():
     # Se añade la columna bloque de modo que se cuente el cambio de estímulo.
     c_estimulo = df.columns[-1]
     df['bloque'] = (df[c_estimulo] != df[c_estimulo].shift()).cumsum()
+    # Filtrar las filas donde los bloques no estén en el grupo 62
+    inicio_grupo_62 = (64 - 1) * 24 + 1  # Primer bloque del grupo 63
+    fin_grupo_62 = 64 * 24               # Último bloque del grupo 63
+    df = df[~df['bloque'].between(inicio_grupo_62, fin_grupo_62)]
+    # Se eliminan las columnas de bloques existentes
+    df = df.drop(columns=['bloque'])
+    
+    # Se vuelve a crear
+    c_estimulo = df.columns[-1]
+    df['bloque'] = (df[c_estimulo] != df[c_estimulo].shift()).cumsum()
+    
     return df
 
 #---------------------------------------------------------------------------------
