@@ -1,5 +1,7 @@
 from tqdm import tqdm
 import filters_and_features as ff
+import pandas as pd
+import numpy as np
 
 def filtrar(df,fs=2000,lowcut=15,highcut=500,notch_freq=50,num_std=6):
     '''
