@@ -178,3 +178,25 @@ def simple_viewer(df_type,row=0,column=0):
 # que estas dos últimas juntas dan la primera, y es lo esperado pues una parte representa
 # la posición sin agarre, y la otra del agarre característico, de modo que juntas forman la
 # señal completa.
+
+#---------------------------------------------------------------------------------
+
+def create_df_block(df):
+    
+    block_rows = []
+    for block_num, group in df.groupby('bloque'):
+        # Seleccionamos todas las columnas de los sensores (14 primeras columnas)
+        sensor_data = group.iloc[:, :-2].values.flatten()
+        # Obtenemos el valor único del agarre (penúltima columna)
+        grip_value = group.iloc[0, -2]
+        # Creamos una nueva fila que contiene los datos del sensor y el valor del agarre
+        new_row = list(sensor_data) + [grip_value]
+        # Añadimos la nueva fila a la lista
+        block_rows.append(new_row)
+    
+    # Creamos un nuevo dataframe a partir de las filas generadas
+    num_sensors = df.shape[1] - 2  # Número de columnas de sensores
+    columns = [f'Sensor_{i+1}' for i in range(num_sensors)] + ['stimulus']
+    new_df = pd.DataFrame(block_rows, columns=columns)
+
+    return new_df
