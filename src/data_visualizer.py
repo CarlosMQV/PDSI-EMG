@@ -182,21 +182,28 @@ def simple_viewer(df_type,row=0,column=0):
 #---------------------------------------------------------------------------------
 
 def create_df_block(df):
+    num_sensores = 14
+    num_bloques = df['bloque'].max()
+    filas_df_block = []
+    # Iteramos sobre cada bloque
+    for i in range(1, num_bloques + 1):
+        fila = []
+        # Filtramos los datos del bloque actual
+        df_filtrado = df[df['bloque'] == i]
+        # Iteramos sobre cada sensor (las primeras 14 columnas)
+        for sensor in range(num_sensores):
+            # Creamos un DataFrame para los valores del sensor en este bloque
+            df_sensor = df_filtrado.iloc[:, sensor]
+            # Añadimos este DataFrame a la fila
+            fila.append(df_sensor.values)
+        # Obtener el valor del estímulo (penúltima columna)
+        estimulo = df_filtrado['stimulus'].iloc[0]
+        # Añadimos la fila con los valores de los sensores y el estímulo
+        fila.append(estimulo)
+        # Añadimos esta fila a la lista de filas globales
+        filas_df_block.append(fila)
+    # Crear el DataFrame global con las filas de sensores y la columna del estímulo
+    columnas = [f'Sensor_{i+1}' for i in range(num_sensores)] + ['Stimulus']
+    df_block = pd.DataFrame(filas_df_block, columns=columnas)
     
-    block_rows = []
-    for block_num, group in df.groupby('bloque'):
-        # Seleccionamos todas las columnas de los sensores (14 primeras columnas)
-        sensor_data = group.iloc[:, :-2].values.flatten()
-        # Obtenemos el valor único del agarre (penúltima columna)
-        grip_value = group.iloc[0, -2]
-        # Creamos una nueva fila que contiene los datos del sensor y el valor del agarre
-        new_row = list(sensor_data) + [grip_value]
-        # Añadimos la nueva fila a la lista
-        block_rows.append(new_row)
-    
-    # Creamos un nuevo dataframe a partir de las filas generadas
-    num_sensors = df.shape[1] - 2  # Número de columnas de sensores
-    columns = [f'Sensor_{i+1}' for i in range(num_sensors)] + ['stimulus']
-    new_df = pd.DataFrame(block_rows, columns=columns)
-
-    return new_df
+    return df_block
