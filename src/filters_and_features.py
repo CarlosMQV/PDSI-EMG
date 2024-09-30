@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from scipy.signal import butter, filtfilt, iirnotch
 from scipy import signal
-from scipy.fftpack import fft
+from scipy.fftpack import fft, fftfreq
 
 # Filtro Butterworth pasa-altos y pasa-bajos
 def butter_bandpass(data, lowcut, highcut, fs, order=4):
@@ -71,18 +71,6 @@ def replace_outliers_with_threshold(series_data, num_std):
   result = pd.Series(clipped_data, index=series_data.index, name=series_data.name)
   return result
 
-def std(data):
-  """
-  Calcula la desviación estándar de los datos.
-
-  Parámetros:
-  data (np.ndarray): Datos para calcular la desviación estándar.
-
-  Devuelve:
-  float: La desviación estándar de los datos.
-  """
-  return np.std(data)
-
 def rms(data):
   """
   Calcula la raíz cuadrática media (RMS) de los datos.
@@ -95,17 +83,18 @@ def rms(data):
   """
   return np.sqrt(np.mean(np.square(data)))
 
-def iemg(data):
+def iemg(data, fs=2000):
   """
   Calcula la integral de la señal EMG (iEMG).
 
   Parámetros:
   data (np.ndarray): Datos de la señal EMG.
+  fs (float): Frecuencia de muestreo en Hz.
 
   Devuelve:
   float: La suma de los valores absolutos de la señal EMG.
   """
-  return np.sum(np.abs(data))
+  return np.sum(data)*(1/fs)
 
 def mav(data):
   """
@@ -143,17 +132,18 @@ def log_detec(data):
   """
   return np.exp(np.mean(np.log(np.abs(data) + 1e-10)))
 
-def ssi(data):
+def ssi(data, fs=2000):
   """
   Calcula la integral de la señal cuadrática (SSI) de los datos.
 
   Parámetros:
   data (np.ndarray): Datos para calcular la integral de la señal cuadrática.
+  fs (float): Frecuencia de muestreo en Hz.
 
   Devuelve:
-  float: La suma de los valores cuadrados de los datos.
+  float: El valor final de la integral de la señal cuadrática.
   """
-  return np.sum(np.square(data))
+  return np.sum(np.square(data)) * (1/fs)
 
 def fast_fourier_trans(data):
   """
@@ -179,6 +169,25 @@ def power_spect_dens(data):
   """
   f, psd = signal.welch(data, fs=2000, nperseg=1024)
   return np.mean(psd)
+
+def mean_frequency(data, fs=2000):
+  """
+  Calcula la frecuencia media de los datos.
+
+  Parámetros:
+  data (np.ndarray): Datos para calcular la frecuencia media.
+  fs (float): Frecuencia de muestreo en Hz.
+
+  Devuelve:
+  float: La frecuencia media de los datos.
+  """
+  N = len(data)
+  T = 1.0 / frecuencia_muestreo
+  yf = fft(data)
+  xf = fftfreq(N, T)[:N//2]
+  espectro = 2.0/N * np.abs(yf[:N//2])
+  frecuencia_media = np.sum(xf * espectro) / np.sum(espectro)
+  return frecuencia_media
 
 def mdf(data):
   """
