@@ -28,7 +28,7 @@ def gen_carac(df):
     smeg_dim = df.shape
 
     stimulus_data = df.iloc[:, -1]  # Última columna (el tipo de agarre)
-    series_data = df.iloc[:, :-1]  # Todas las columnas excepto la última
+    smeg_preprocess_data = df.iloc[:, :-1]  # Todas las columnas excepto la última
 
     # Características que pueden extraerse
     feature_funcs = {
