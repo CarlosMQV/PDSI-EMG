@@ -24,11 +24,10 @@ def filtrar(df,fs=2000,lowcut=15,highcut=500,notch_freq=50,num_std=6):
     return df
 
 def gen_carac(df):
-
-    smeg_dim = df.shape
-
     stimulus_data = df.iloc[:, -1]  # Última columna (el tipo de agarre)
     smeg_preprocess_data = df.iloc[:, :-1]  # Todas las columnas excepto la última
+
+    smeg_dim = smeg_preprocess_data.shape
 
     # Características que pueden extraerse
     feature_funcs = {
