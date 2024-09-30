@@ -192,17 +192,17 @@ def create_df_block(df):
         df_filtrado = df[df['bloque'] == i]
         # Iteramos sobre cada sensor (las primeras 14 columnas)
         for sensor in range(num_sensores):
-            # Creamos un DataFrame para los valores del sensor en este bloque
-            df_sensor = df_filtrado.iloc[:, sensor]
+            # Convertimos los valores del sensor en una pd.Series (mantiene el índice)
+            df_sensor = pd.Series(df_filtrado.iloc[:, sensor].values)
             # Añadimos este DataFrame a la fila
-            fila.append(df_sensor.values)
+            fila.append(df_sensor)     
         # Obtener el valor del estímulo (penúltima columna)
         estimulo = df_filtrado['stimulus'].iloc[0]
         # Añadimos la fila con los valores de los sensores y el estímulo
         fila.append(estimulo)
         # Añadimos esta fila a la lista de filas globales
         filas_df_block.append(fila)
-    # Crear el DataFrame global con las filas de sensores y la columna del estímulo
+    # Crear el DataFrame global con las filas de DataFrames de sensores y la columna del estímulo
     columnas = [f'Sensor_{i+1}' for i in range(num_sensores)] + ['Stimulus']
     df_block = pd.DataFrame(filas_df_block, columns=columnas)
     
