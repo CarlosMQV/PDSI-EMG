@@ -2,6 +2,7 @@ from tqdm import tqdm
 import filters_and_features as ff
 import pandas as pd
 import numpy as np
+from sklearn.preprocessing import StandardScaler
 
 def filtrar(df,fs=2000,lowcut=15,highcut=500,notch_freq=50,num_std=6):
     '''
@@ -79,3 +80,17 @@ def gen_carac(df):
     features_data.fillna(0, inplace=True)
 
     return features_data
+
+def normalizar(df):
+    emg_features = df.iloc[:, :-1]
+    emg_stimulus = df.iloc[:, -1]
+    # Inicializamos el estandarizador para hacer Z-score
+    scaler = StandardScaler()
+    # Estandarizamos las columnas de características
+    emg_features_normalized = scaler.fit_transform(emg_features)
+    # Convertimos las características normalizadas de nuevo a DataFrame, conservando las columnas originales
+    emg_features_normalized = pd.DataFrame(emg_features_normalized, columns=emg_features.columns, index=emg_features.index)
+    # Añadimos la columna de 'stimulus' nuevamente al DataFrame normalizado
+    df_normalized = pd.concat([emg_features_normalized, emg_stimulus], axis=1)
+    
+    return df_normalized
