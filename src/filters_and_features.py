@@ -92,7 +92,7 @@ def iemg(data, fs=2000):
   fs (float): Frecuencia de muestreo en Hz.
 
   Devuelve:
-  float: La suma de los valores absolutos de la señal EMG.
+  float: La suma de los valores de la señal EMG.
   """
   return np.sum(data)*(1/fs)
 
