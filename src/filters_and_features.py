@@ -182,7 +182,7 @@ def mean_frequency(data, fs=2000):
   float: La frecuencia media de los datos.
   """
   N = len(data)
-  T = 1.0 / frecuencia_muestreo
+  T = 1.0 / fs
   yf = fft(data)
   xf = fftfreq(N, T)[:N//2]
   espectro = 2.0/N * np.abs(yf[:N//2])

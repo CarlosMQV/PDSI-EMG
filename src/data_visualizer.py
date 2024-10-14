@@ -178,3 +178,32 @@ def simple_viewer(df_type,row=0,column=0):
 # que estas dos últimas juntas dan la primera, y es lo esperado pues una parte representa
 # la posición sin agarre, y la otra del agarre característico, de modo que juntas forman la
 # señal completa.
+
+#---------------------------------------------------------------------------------
+
+def create_df_block(df):
+    num_sensores = 14
+    num_bloques = df['bloque'].max()
+    filas_df_block = []
+    # Iteramos sobre cada bloque
+    for i in range(1, num_bloques + 1):
+        fila = []
+        # Filtramos los datos del bloque actual
+        df_filtrado = df[df['bloque'] == i]
+        # Iteramos sobre cada sensor (las primeras 14 columnas)
+        for sensor in range(num_sensores):
+            # Convertimos los valores del sensor en una pd.Series (mantiene el índice)
+            df_sensor = pd.Series(df_filtrado.iloc[:, sensor].values)
+            # Añadimos este DataFrame a la fila
+            fila.append(df_sensor)     
+        # Obtener el valor del estímulo (penúltima columna)
+        estimulo = df_filtrado['stimulus'].iloc[0]
+        # Añadimos la fila con los valores de los sensores y el estímulo
+        fila.append(estimulo)
+        # Añadimos esta fila a la lista de filas globales
+        filas_df_block.append(fila)
+    # Crear el DataFrame global con las filas de DataFrames de sensores y la columna del estímulo
+    columnas = [f'Sensor_{i+1}' for i in range(num_sensores)] + ['Stimulus']
+    df_block = pd.DataFrame(filas_df_block, columns=columnas)
+    
+    return df_block
