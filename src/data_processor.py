@@ -7,25 +7,27 @@ import matplotlib.pyplot as plt
 
 #---------------------------------------------------------------------------------
 def lectura():
-    # Dataframes del sujeto 1
-    df1 = pd.read_parquet('../datasets/ninapro/DB6_s1_a/S1_D1_T1.parquet', engine='pyarrow')
-    df2 = pd.read_parquet('../datasets/ninapro/DB6_s1_a/S1_D1_T2.parquet', engine='pyarrow')
-    df3 = pd.read_parquet('../datasets/ninapro/DB6_s1_a/S1_D2_T1.parquet', engine='pyarrow')
-    df4 = pd.read_parquet('../datasets/ninapro/DB6_s1_a/S1_D2_T2.parquet', engine='pyarrow')
-    df5 = pd.read_parquet('../datasets/ninapro/DB6_s1_a/S1_D3_T1.parquet', engine='pyarrow')
-    df6 = pd.read_parquet('../datasets/ninapro/DB6_s1_a/S1_D3_T2.parquet', engine='pyarrow')
-    df_s1 = pd.concat([df1, df2, df3, df4, df5, df6], ignore_index=True)
-    # Dataframes del sujeto 2
-    df1 = pd.read_parquet('../datasets/ninapro/DB6_s2_a/S2_D1_T1.parquet', engine='pyarrow')
-    df2 = pd.read_parquet('../datasets/ninapro/DB6_s2_a/S2_D1_T2.parquet', engine='pyarrow')
-    df3 = pd.read_parquet('../datasets/ninapro/DB6_s2_a/S2_D2_T1.parquet', engine='pyarrow')
-    df4 = pd.read_parquet('../datasets/ninapro/DB6_s2_a/S2_D2_T2.parquet', engine='pyarrow')
-    df5 = pd.read_parquet('../datasets/ninapro/DB6_s2_a/S2_D3_T1.parquet', engine='pyarrow')
-    df6 = pd.read_parquet('../datasets/ninapro/DB6_s2_a/S2_D3_T2.parquet', engine='pyarrow')
-    df_s2 = pd.concat([df1, df2, df3, df4, df5, df6], ignore_index=True)
     
-    # Creamos un solo dataframe y eliminamos columnas 9 y 10
-    df = pd.concat([df_s1, df_s2], ignore_index=True)
+    # Ruta base donde se encuentran los archivos
+    base_path = '../datasets/'
+
+    dfs = []
+
+    # Iteramos sobre las combinaciones de S, D y T
+    for i in range(1, 11):  # S del 1 al 10
+        for j in range(1, 6):  # D del 1 al 5
+            for k in range(1, 3):  # T del 1 al 2
+                file_path = f'{base_path}S{i}_D{j}_T{k}.parquet'
+                try:
+                    # Intentamos leer el archivo
+                    df = pd.read_parquet(file_path, engine='pyarrow')
+                    dfs.append(df)  # Si lo encontramos, lo añadimos a la lista
+                except FileNotFoundError:
+                    # Si no encontramos el archivo, continuamos con el siguiente
+                    continue
+
+    # Concatenamos todos los DataFrames en uno solo
+    df = pd.concat(dfs, ignore_index=True)
     df = df.drop(columns=[df.columns[8], df.columns[9]])
     # Para saber cuántos datos de los estímulos hay.
     # Conteo_por_estado = df[df.columns[-1]].value_counts()
