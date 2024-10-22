@@ -11,7 +11,7 @@ import pyarrow.parquet as pq
 
 #---------------------------------------------------------------------------------
 
-def lectura(nivel_ram=1, ruta_salida='../dataframes/', nombre_archivo='df.parquet'):
+def lectura(nivel_ram=3, ruta_salida='../dataframes/', nombre_archivo='df.parquet'):
     # Ruta base donde se encuentran los archivos
     base_path = '../datasets/'
     
@@ -31,14 +31,18 @@ def lectura(nivel_ram=1, ruta_salida='../dataframes/', nombre_archivo='df.parque
     # Tamaño del bloque de archivos a leer según nivel de RAM
     tamano_bloque = segmentaciones.get(nivel_ram, 10)
 
-    # Crear un archivo Parquet en el que iremos almacenando los bloques
-    first_write = True  # Para saber si es la primera escritura en el archivo
-
     # Contar cuántos archivos totales hay para mostrar barra de progreso
     total_files = sum([1 for i in range(1, 11) for j in range(1, 6) for k in range(1, 3)])
 
     # Barra de progreso
     progress = tqdm(total=total_files, desc="Procesando archivos Parquet")
+
+    # Crear un ParquetWriter para ir agregando tablas de datos
+    parquet_path = f'{ruta_salida}{nombre_archivo}'
+    parquet_writer = None
+
+    # Variable para rastrear el número acumulado de bloque
+    bloque_acumulado = 0
 
     # Iterar en bloques sobre las combinaciones de S, D y T
     for i in range(1, 11, tamano_bloque):  # Procesar de S en bloques
@@ -55,6 +59,12 @@ def lectura(nivel_ram=1, ruta_salida='../dataframes/', nombre_archivo='df.parque
                         c_estimulo = df.columns[-1]
                         df['bloque'] = (df[c_estimulo] != df[c_estimulo].shift()).cumsum()
 
+                        # Ajustar el valor del bloque para continuar con el valor acumulado
+                        df['bloque'] += bloque_acumulado
+
+                        # Actualizar el bloque acumulado al último valor de 'bloque' del DataFrame actual
+                        bloque_acumulado = df['bloque'].iloc[-1]
+
                         # Agregar a la lista de DataFrames
                         dfs.append(df)
                         
@@ -70,17 +80,20 @@ def lectura(nivel_ram=1, ruta_salida='../dataframes/', nombre_archivo='df.parque
                 df_bloque = pd.concat(dfs, ignore_index=True)
                 table = pa.Table.from_pandas(df_bloque)
 
-                # Escribir o añadir al archivo Parquet
-                if first_write:
-                    pq.write_table(table, f'{ruta_salida}{nombre_archivo}', compression='snappy')
-                    first_write = False  # Cambiar flag después del primer guardado
-                else:
-                    with pq.ParquetWriter(f'{ruta_salida}{nombre_archivo}', table.schema, compression='snappy', use_dictionary=True) as writer:
-                        writer.write_table(table)
+                # Inicializar el ParquetWriter si aún no existe
+                if parquet_writer is None:
+                    parquet_writer = pq.ParquetWriter(parquet_path, table.schema, compression='snappy')
+
+                # Escribir el bloque en el archivo Parquet
+                parquet_writer.write_table(table)
 
                 # Limpiar memoria después de cada bloque
                 del dfs, df_bloque, table, df  # Eliminar explícitamente todas las variables del bloque
                 gc.collect()  # Forzar recolección de basura
+
+    # Cerrar el ParquetWriter cuando todo esté escrito
+    if parquet_writer:
+        parquet_writer.close()
 
     # Cerrar la barra de progreso
     progress.close()
