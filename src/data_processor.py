@@ -4,6 +4,10 @@ import pandas as pd
 import numpy as np
 from sklearn.preprocessing import StandardScaler
 import matplotlib.pyplot as plt
+import os
+import gc
+import pyarrow as pa
+import pyarrow.parquet as pq
 
 #---------------------------------------------------------------------------------
 
