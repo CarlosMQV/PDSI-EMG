@@ -11,7 +11,7 @@ import pyarrow.parquet as pq
 
 #---------------------------------------------------------------------------------
 
-def lectura(nivel_ram=3, ruta_salida='../dataframes/', nombre_archivo='df.parquet'):
+def lectura(nivel_ram=1, ruta_salida='../dataframes/', nombre_archivo='df.parquet'):
     # Ruta base donde se encuentran los archivos
     base_path = '../datasets/'
     
@@ -42,8 +42,8 @@ def lectura(nivel_ram=3, ruta_salida='../dataframes/', nombre_archivo='df.parque
 
     # Iterar en bloques sobre las combinaciones de S, D y T
     for i in range(1, 11, tamano_bloque):  # Procesar de S en bloques
-        dfs = []
         for s in range(i, min(i + tamano_bloque, 11)):  # Bloque de archivos
+            dfs = []  # Lista para almacenar temporalmente los DataFrames del bloque
             for j in range(1, 6):  # D del 1 al 5
                 for k in range(1, 3):  # T del 1 al 2
                     file_path = f'{base_path}S{s}_D{j}_T{k}.parquet'
@@ -65,22 +65,22 @@ def lectura(nivel_ram=3, ruta_salida='../dataframes/', nombre_archivo='df.parque
                     # Actualizar la barra de progreso
                     progress.update(1)
 
-        # Concatenar el bloque de DataFrames
-        if dfs:
-            df_bloque = pd.concat(dfs, ignore_index=True)
-            table = pa.Table.from_pandas(df_bloque)
+            # Concatenar el bloque de DataFrames
+            if dfs:
+                df_bloque = pd.concat(dfs, ignore_index=True)
+                table = pa.Table.from_pandas(df_bloque)
 
-            # Escribir o añadir al archivo Parquet
-            if first_write:
-                pq.write_table(table, f'{ruta_salida}{nombre_archivo}', compression='snappy')
-                first_write = False  # Cambiar flag después del primer guardado
-            else:
-                with pq.ParquetWriter(f'{ruta_salida}{nombre_archivo}', table.schema, compression='snappy', use_dictionary=True) as writer:
-                    writer.write_table(table)
+                # Escribir o añadir al archivo Parquet
+                if first_write:
+                    pq.write_table(table, f'{ruta_salida}{nombre_archivo}', compression='snappy')
+                    first_write = False  # Cambiar flag después del primer guardado
+                else:
+                    with pq.ParquetWriter(f'{ruta_salida}{nombre_archivo}', table.schema, compression='snappy', use_dictionary=True) as writer:
+                        writer.write_table(table)
 
-            # Limpiar memoria después de cada bloque
-            del dfs, df_bloque, table
-            gc.collect()
+                # Limpiar memoria después de cada bloque
+                del dfs, df_bloque, table, df  # Eliminar explícitamente todas las variables del bloque
+                gc.collect()  # Forzar recolección de basura
 
     # Cerrar la barra de progreso
     progress.close()
