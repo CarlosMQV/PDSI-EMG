@@ -211,7 +211,7 @@ def create_df_block(df):
         # Añadimos esta fila a la lista de filas globales
         filas_df_block.append(fila)
     # Crear el DataFrame global con las filas de DataFrames de sensores y la columna del estímulo
-    columnas = [f'Sensor_{i+1}' for i in range(num_sensores)] + ['Stimulus']
+    columnas = [f'sensor_{i+1}' for i in range(num_sensores)] + ['stimulus']
     df_block = pd.DataFrame(filas_df_block, columns=columnas)
     
     return df_block
