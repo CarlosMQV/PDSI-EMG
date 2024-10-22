@@ -38,7 +38,7 @@ def lectura(nivel_ram=3, ruta_salida='../dataframes/', nombre_archivo='df.parque
     total_files = sum([1 for i in range(1, 11) for j in range(1, 6) for k in range(1, 3)])
 
     # Barra de progreso
-    progress = tqdm.tqdm(total=total_files, desc="Procesando archivos Parquet")
+    progress = tqdm(total=total_files, desc="Procesando archivos Parquet")
 
     # Iterar en bloques sobre las combinaciones de S, D y T
     for i in range(1, 11, tamano_bloque):  # Procesar de S en bloques
