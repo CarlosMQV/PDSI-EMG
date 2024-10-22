@@ -8,6 +8,7 @@ import os
 import gc
 import pyarrow as pa
 import pyarrow.parquet as pq
+import dask.dataframe as dd
 
 #---------------------------------------------------------------------------------
 
@@ -100,3 +101,69 @@ def lectura(nivel_ram=3, ruta_salida='../dataframes/', nombre_archivo='df.parque
 
 #---------------------------------------------------------------------------------
 
+def create_df_block(df_path = '../dataframes/df.parquet', nivel_ram=3, ruta_salida='../dataframes/', nombre_archivo='df_block.parquet'):
+# Definir segmentaciones según el nivel de RAM
+    segmentaciones = {
+        1: 5,    # Bloques pequeños (bajo uso de RAM)
+        2: 10,   # Bloques moderados
+        3: 20,   # Bloques más grandes
+        4: 30,   # Bloques grandes
+        5: 50    # Mayor cantidad de archivos en cada bloque
+    }
+    
+    tamano_bloque = segmentaciones.get(nivel_ram, 20)
+
+    # Configuración de Dask para manejar los datos de forma eficiente
+    dask_df = dd.read_parquet(df_path, engine='pyarrow', blocksize="100MB")
+
+    num_sensores = 14
+    parquet_writer = None
+    filas_df_block = []
+
+    # Obtener el número total de bloques para mostrar la barra de progreso
+    total_bloques = len(dask_df.to_delayed())
+
+    # Dividir el DataFrame en bloques para evitar sobrecargar la RAM, mostrando la barra de progreso
+    for i, df in tqdm(enumerate(dask_df.to_delayed()), total=total_bloques, desc="Procesando bloques"):
+        df = df.compute()  # Computar el bloque de Dask para obtener un DataFrame de pandas
+        num_bloques = df['bloque'].max()
+
+        # Crear las filas del nuevo DataFrame bloque por bloque
+        for i in range(1, num_bloques + 1):
+            fila = []
+            df_filtrado = df[df['bloque'] == i]
+
+            # Verificar si el DataFrame filtrado está vacío antes de continuar
+            if df_filtrado.empty:
+                continue
+
+            for sensor in range(num_sensores):
+                # Asegurar que sea un array numpy o lista y no un objeto tipo Series
+                df_sensor = df_filtrado.iloc[:, sensor].values.flatten().tolist()
+                fila.append(df_sensor)
+
+            # Obtener el estímulo del bloque
+            estimulo = df_filtrado['stimulus'].iloc[0]
+            fila.append(estimulo)
+            filas_df_block.append(fila)
+
+        # Crear el DataFrame del bloque actual
+        columnas = [f'sensor_{i+1}' for i in range(num_sensores)] + ['stimulus']
+        df_final = pd.DataFrame(filas_df_block, columns=columnas)
+
+        # Convertir el DataFrame en una tabla de Apache Arrow
+        table = pa.Table.from_pandas(df_final, preserve_index=False)
+
+        if parquet_writer is None:
+            parquet_writer = pq.ParquetWriter(f'{ruta_salida}{nombre_archivo}', table.schema, compression='snappy')
+
+        parquet_writer.write_table(table)
+
+        # Limpiar memoria después de cada bloque
+        del df_final, filas_df_block, df_filtrado, df_sensor, fila
+        filas_df_block = []  # Reiniciar las filas para el siguiente bloque
+        gc.collect()
+
+    # Cerrar el ParquetWriter cuando todo esté escrito
+    if parquet_writer:
+        parquet_writer.close()
