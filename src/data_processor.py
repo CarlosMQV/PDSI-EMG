@@ -32,6 +32,7 @@ def lectura():
     # Para saber cuántos datos de los estímulos hay.
     # Conteo_por_estado = df[df.columns[-1]].value_counts()
     
+    '''
     # Se añade la columna bloque de modo que se cuente el cambio de estímulo.
     c_estimulo = df.columns[-1]
     df['bloque'] = (df[c_estimulo] != df[c_estimulo].shift()).cumsum()
@@ -41,7 +42,7 @@ def lectura():
     df = df[~df['bloque'].between(inicio_grupo_62, fin_grupo_62)]
     # Se eliminan las columnas de bloques existentes
     df = df.drop(columns=['bloque'])
-    
+    '''
     # Se vuelve a crear
     c_estimulo = df.columns[-1]
     df['bloque'] = (df[c_estimulo] != df[c_estimulo].shift()).cumsum()
