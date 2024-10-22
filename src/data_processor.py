@@ -15,8 +15,8 @@ def lectura(base_path='../datasets/'):
     # Ruta base donde se encuentran los archivos
     dfs = []
     # Iteramos sobre las combinaciones de S, D y T
-    for i in range(1, 11):  # S del 1 al 10
-        for j in range(1, 6):  # D del 1 al 5
+    for i in range(1, 3):  # S del 1 al 2
+        for j in range(1, 4):  # D del 1 al 3
             for k in range(1, 3):  # T del 1 al 2
                 file_path = f'{base_path}S{i}_D{j}_T{k}.parquet'
                 try:
