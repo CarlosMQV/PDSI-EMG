@@ -314,19 +314,20 @@ def normalizar(df):
     return df_normalized
 
 def balance(dataframe):
-    # Contador para los ceros procesados
-    zero_count = 0
-    # Cantidad máxima de ceros que queremos conservar
-    target_zeros = dataframe[dataframe["stimulus"] == 0].shape[0] // 7
-
-    # Iterar sobre el dataframe de forma inversa para evitar problemas de índice
-    for index in dataframe.index[::-1]:
-        # Si el valor en "stimulus" es 0 y hemos alcanzado el límite deseado de ceros
-        if dataframe.at[index, "stimulus"] == 0:
-            if zero_count < target_zeros:
-                zero_count += 1  # Contar este cero
-            else:
-                dataframe.drop(index, inplace=True)  # Eliminar el excedente de ceros
-                
-    # Resetear el índice del dataframe tras las eliminaciones
+    # Contar el número de filas por categoría en 'stimulus'
+    counts = dataframe["stimulus"].value_counts()
+    # Determinar el mínimo de filas entre las categorías
+    min_count = counts.min()
+    
+    # Iterar sobre cada categoría que tiene más filas que min_count
+    for value, count in counts.items():
+        if count > min_count:
+            # Calcular cuántas filas deben eliminarse
+            excess_count = count - min_count
+            # Obtener los índices de las filas que exceden el mínimo para esta categoría
+            indices_to_drop = dataframe[dataframe["stimulus"] == value].sample(n=excess_count, random_state=42).index
+            # Eliminar las filas en exceso
+            dataframe.drop(indices_to_drop, inplace=True)
+    
+    # Resetear el índice del dataframe
     dataframe.reset_index(drop=True, inplace=True)
