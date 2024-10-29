@@ -312,3 +312,21 @@ def normalizar(df):
     df_normalized = pd.concat([emg_features_normalized, emg_stimulus], axis=1)
     
     return df_normalized
+
+def balance(dataframe):
+    # Contador para los ceros procesados
+    zero_count = 0
+    # Cantidad máxima de ceros que queremos conservar
+    target_zeros = dataframe[dataframe["stimulus"] == 0].shape[0] // 7
+
+    # Iterar sobre el dataframe de forma inversa para evitar problemas de índice
+    for index in dataframe.index[::-1]:
+        # Si el valor en "stimulus" es 0 y hemos alcanzado el límite deseado de ceros
+        if dataframe.at[index, "stimulus"] == 0:
+            if zero_count < target_zeros:
+                zero_count += 1  # Contar este cero
+            else:
+                dataframe.drop(index, inplace=True)  # Eliminar el excedente de ceros
+                
+    # Resetear el índice del dataframe tras las eliminaciones
+    dataframe.reset_index(drop=True, inplace=True)
