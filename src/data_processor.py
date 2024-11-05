@@ -15,14 +15,14 @@ def lectura(mode=1,base_path='../datasets/'):
 
     if mode == 1:
         n0 = 1
-        n1 = 3
-        n2 = 4
-        n3 = 3
+        n1 = 10
+        n2 = 3
+        n3 = 2
     elif mode == 2:
-        n0 = 3
-        n1 = 4
-        n2 = 4
-        n3 = 3
+        n0 = 10
+        n1 = 11
+        n2 = 3
+        n3 = 2
     elif mode == 3:
         n0 = 1
         n1 = 10
