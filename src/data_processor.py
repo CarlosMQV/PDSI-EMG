@@ -16,12 +16,12 @@ def lectura(mode=1,base_path='../datasets/'):
     if mode == 1:
         n0 = 1
         n1 = 10
-        n2 = 3
+        n2 = 5
         n3 = 2
     elif mode == 2:
         n0 = 10
         n1 = 11
-        n2 = 3
+        n2 = 5
         n3 = 2
     elif mode == 3:
         n0 = 1
@@ -42,9 +42,9 @@ def lectura(mode=1,base_path='../datasets/'):
     # Ruta base donde se encuentran los archivos
     dfs = []
     # Iteramos sobre las combinaciones de S, D y T
-    for i in range(n0, n1):  # S del 1 al 2
-        for j in range(1, n2):  # D del 1 al 3
-            for k in range(1, n3):  # T del 1 al 2
+    for i in range(n0, n1):  # S del n0 al n1-1
+        for j in range(1, n2):  # D del 1 al n2-1
+            for k in range(1, n3):  # T del 1 al n3-1
                 file_path = f'{base_path}S{i}_D{j}_T{k}.parquet'
                 try:
                     # Intentamos leer el archivo
