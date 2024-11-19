@@ -25,13 +25,13 @@ def lectura(mode=1,base_path='../datasets/'):
         n3 = 2
     elif mode == 3:
         n0 = 1
-        n1 = 10
+        n1 = 3
         n2 = 6
         n3 = 3
     elif mode == 4:
         n0 = 10
         n1 = 11
-        n2 = 6
+        n2 = 4
         n3 = 3
     else:
         n0 = 1
