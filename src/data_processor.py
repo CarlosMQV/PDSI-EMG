@@ -245,7 +245,7 @@ def create_df_block(df):
 
 #---------------------------------------------------------------------------------
 
-def filtrar(df,fs=2000,lowcut=15,highcut=500,notch_freq=50,num_std=6):
+def filter(df,fs=2000,lowcut=15,highcut=500,notch_freq=50,num_std=6):
     '''
     fs: Frecuencia de muestreo en Hz
     lowcut: Para eliminar frecuencias inferiores al valor espeificado
@@ -326,7 +326,7 @@ def gen_carac(df):
 
 #---------------------------------------------------------------------------------
 
-def normalizar(df):
+def normalize(df):
     emg_features = df.iloc[:, :-1]
     emg_stimulus = df.iloc[:, -1]
     # Inicializamos el estandarizador para hacer Z-score
@@ -338,7 +338,24 @@ def normalizar(df):
     # Añadimos la columna de 'stimulus' nuevamente al DataFrame normalizado
     df_normalized = pd.concat([emg_features_normalized, emg_stimulus], axis=1)
     
-    return df_normalized
+    return scaler, df_normalized
+
+def normalize_test_data(scaler, df_test):
+    # Separar características y estímulos del conjunto de testeo
+    emg_features_test = df_test.iloc[:, :-1]
+    emg_stimulus_test = df_test.iloc[:, -1]
+    
+    # Normalizar las características del conjunto de testeo utilizando el scaler entrenado
+    emg_features_test_normalized = scaler.transform(emg_features_test)
+    
+    # Convertir las características normalizadas de nuevo a DataFrame
+    emg_features_test_normalized = pd.DataFrame(emg_features_test_normalized, columns=emg_features_test.columns, index=emg_features_test.index)
+    
+    # Añadir la columna de 'stimulus' nuevamente al DataFrame normalizado
+    df_test_normalized = pd.concat([emg_features_test_normalized, emg_stimulus_test], axis=1)
+    
+    return df_test_normalized
+
 
 def balance(dataframe):
     # Contar el número de filas por categoría en 'stimulus'
