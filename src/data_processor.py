@@ -245,7 +245,7 @@ def create_df_block(df):
 
 #---------------------------------------------------------------------------------
 
-def filter(df,fs=2000,lowcut=15,highcut=500,notch_freq=50,num_std=6):
+def filter(df,fs=2000,lowcut=15,highcut=500,notch_freq=50,num_std=8):
     '''
     fs: Frecuencia de muestreo en Hz
     lowcut: Para eliminar frecuencias inferiores al valor espeificado
@@ -277,17 +277,24 @@ def gen_carac(df):
 
     # Características que pueden extraerse
     feature_funcs = {
-        'rms': ff.rms,
-        'iemg': ff.iemg,
-        'mav': ff.mav,
-        'wl': ff.wl,
-        'log_detec': ff.log_detec,
-        'ssi': ff.ssi,
-        'fft': ff.fast_fourier_trans,
-        'psd': ff.power_spect_dens,
-        'mf': ff.mean_frequency,
-        'mdf': ff.mdf,
-        'zc': ff.zc,
+      #'rms': ff.rms,
+      #'iemg': ff.iemg,
+      #'mav': ff.mav,
+      #'wl': ff.wl,
+      #'log_detec': ff.log_detec,
+      #'ssi': ff.ssi,
+      'fft': ff.fast_fourier_trans,
+      'psd': ff.power_spect_dens,
+      'mf': ff.mean_frequency,
+      'mdf': ff.mdf,
+      'zc': ff.zc,
+      #'var': ff.var,
+      'ssc': ff.ssc,
+      #'stft': ff.stft_features,
+      #'cwt': ff.cwt_features,
+      'df': ff.dominant_frequency,
+      'sk': ff.spectral_kurtosis,
+      'br': ff.band_ratio,
     }
     # Creamos un dataframe con columnas para cada característica y sensor
     sensor_count = smeg_dim[1]  # Cantidad de sensores (número de columnas del dataframe original)

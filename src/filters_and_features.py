@@ -1,3 +1,4 @@
+import pywt
 import numpy as np
 import pandas as pd
 from scipy.signal import butter, filtfilt, iirnotch
@@ -83,18 +84,17 @@ def rms(data):
   """
   return np.sqrt(np.mean(np.square(data)))
 
-def iemg(data, fs=2000):
+def iemg(data, fs=None):
   """
   Calcula la integral de la señal EMG (iEMG).
 
   Parámetros:
   data (np.ndarray): Datos de la señal EMG.
-  fs (float): Frecuencia de muestreo en Hz.
 
   Devuelve:
   float: La suma de los valores de la señal EMG.
   """
-  return np.sum(data)*(1/fs)
+  return np.sum(np.abs(data))
 
 def mav(data):
   """
@@ -186,8 +186,13 @@ def mean_frequency(data, fs=2000):
   yf = fft(data)
   xf = fftfreq(N, T)[:N//2]
   espectro = 2.0/N * np.abs(yf[:N//2])
-  frecuencia_media = np.sum(xf * espectro) / np.sum(espectro)
-  return frecuencia_media
+  suma_espectro = np.sum(espectro)
+
+  if suma_espectro == 0:  # Manejar caso de suma cero
+      return 0  # O asignar un valor predeterminado
+  else:
+      frecuencia_media = np.sum(xf * espectro) / suma_espectro
+      return frecuencia_media
 
 def mdf(data):
   """
@@ -216,3 +221,115 @@ def zc(data):
   int: El número de cruces por cero en los datos.
   """
   return len(np.where(np.diff(np.sign(data)))[0])
+
+def var(data):
+  """
+  Calcula la varianza de los datos.
+
+  Parámetros:
+  data (np.ndarray): Datos para calcular la varianza.
+
+  Devuelve:
+  float: La varianza de los datos.
+  """
+  return np.var(data)
+
+def ssc(data, threshold=0):
+  """
+  Calcula el número de cambios de pendiente (SSC) en los datos.
+
+  Parámetros:
+  data (np.ndarray): Datos para calcular los cambios de pendiente.
+  threshold (float): Umbral mínimo para considerar un cambio de pendiente.
+
+  Devuelve:
+  int: El número de cambios de pendiente.
+  """
+  diff = np.diff(data)
+  return np.sum((diff[:-1] * diff[1:] < 0) & (np.abs(diff[:-1] - diff[1:]) >= threshold))
+
+def stft_features(data, fs=2000, nperseg=256):
+  """
+  Calcula la Transformada de Fourier de Tiempo Corto (STFT) de los datos.
+
+  Parámetros:
+  data (np.ndarray): Datos para calcular la STFT.
+  fs (float): Frecuencia de muestreo.
+  nperseg (int): Tamaño de cada segmento de ventana.
+
+  Devuelve:
+  tuple: Frecuencias, tiempos, y magnitudes del espectrograma.
+  """
+  f, t, Zxx = signal.stft(data, fs=fs, nperseg=nperseg)
+  return f, t, np.abs(Zxx)
+
+def cwt_features(data, scales=np.arange(1, 128), wavelet='morl'):
+  """
+  Calcula la Transformada de Wavelet Continua (CWT) de los datos.
+
+  Parámetros:
+  data (np.ndarray): Datos para calcular la CWT.
+  scales (np.ndarray): Escalas para la CWT.
+  wavelet (str): Tipo de onda para la CWT.
+
+  Devuelve:
+  np.ndarray: Coeficientes de la CWT.
+  """
+  coef, _ = pywt.cwt(data, scales, wavelet)
+  return coef
+
+def dominant_frequency(data, fs=2000):
+  """
+  Calcula la frecuencia dominante de los datos.
+
+  Parámetros:
+  data (np.ndarray): Datos para calcular la frecuencia dominante.
+  fs (float): Frecuencia de muestreo en Hz.
+
+  Devuelve:
+  float: La frecuencia dominante.
+  """
+  N = len(data)
+  fft_data = np.abs(fft(data)[:N//2])
+  freqs = np.fft.fftfreq(N, 1/fs)[:N//2]
+  return freqs[np.argmax(fft_data)]
+
+from scipy.stats import kurtosis
+
+def spectral_kurtosis(data):
+  """
+  Calcula la curtosis espectral de los datos.
+
+  Parámetros:
+  data (np.ndarray): Datos para calcular la curtosis espectral.
+
+  Devuelve:
+  float: La curtosis espectral.
+  """
+  fft_data = np.abs(fft(data))
+  return kurtosis(fft_data)
+
+def band_ratio(data, fs=2000, low_band=(0, 50), high_band=(50, 450)):
+  """
+  Calcula la proporción de energía entre dos bandas de frecuencia.
+
+  Parámetros:
+  data (np.ndarray): Datos para calcular la proporción de bandas.
+  fs (float): Frecuencia de muestreo.
+  low_band (tuple): Rango de la banda baja (en Hz).
+  high_band (tuple): Rango de la banda alta (en Hz).
+
+  Devuelve:
+  float: La relación de energía entre las bandas.
+  """
+  N = len(data)
+  fft_data = np.abs(fft(data)[:N//2])
+  freqs = np.fft.fftfreq(N, 1/fs)[:N//2]
+  
+  low_energy = np.sum(fft_data[np.logical_and(freqs >= low_band[0], freqs < low_band[1])]) 
+  high_energy = np.sum(fft_data[np.logical_and(freqs >= high_band[0], freqs < high_band[1])])
+  
+  if high_energy == 0:
+    return low_energy
+  else:
+    return low_energy / high_energy
