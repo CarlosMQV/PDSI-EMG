@@ -333,6 +333,50 @@ def gen_carac(df):
 
 #---------------------------------------------------------------------------------
 
+def pre_normalize(df):
+    """
+    Normaliza las señales EMG contenidas en un DataFrame, separando características y estímulos.
+
+    Args:
+        df: DataFrame donde las columnas de características contienen señales EMG (pd.Series, listas o arrays),
+            y la última columna contiene el estímulo.
+
+    Returns:
+        DataFrame con señales normalizadas y estímulos conservados.
+    """
+    # Separar características (señales EMG) y estímulos
+    emg_features = df.iloc[:, :-1]
+    emg_stimulus = df.iloc[:, -1]
+
+    # Inicializar un DataFrame vacío para almacenar las características normalizadas
+    emg_features_normalized = pd.DataFrame(index=emg_features.index)
+
+    # Normalizar cada columna de características
+    scaler = StandardScaler()
+    for col in emg_features.columns:
+        normalized_signals = []
+        for signal in emg_features[col]:
+            # Convertir la señal a array si es pd.Series
+            if isinstance(signal, pd.Series):
+                signal = signal.to_numpy()
+            elif isinstance(signal, (list, np.ndarray)):
+                signal = np.array(signal)
+            else:
+                raise ValueError(f"Celda en la columna '{col}' no contiene una señal válida.")
+
+            # Normalizar la señal individualmente
+            signal = signal.reshape(-1, 1)  # Convertir a 2D para StandardScaler
+            normalized_signal = scaler.fit_transform(signal).flatten()
+            normalized_signals.append(pd.Series(normalized_signal))
+
+        # Guardar las señales normalizadas en la columna correspondiente
+        emg_features_normalized[col] = normalized_signals
+
+    # Concatenar las características normalizadas con el estímulo
+    df_normalized = pd.concat([emg_features_normalized, emg_stimulus], axis=1)
+
+    return df_normalized
+
 def normalize(df):
     emg_features = df.iloc[:, :-1]
     emg_stimulus = df.iloc[:, -1]
