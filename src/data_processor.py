@@ -245,7 +245,7 @@ def create_df_block(df):
 
 #---------------------------------------------------------------------------------
 
-def filter(df,fs=2000,lowcut=15,highcut=500,notch_freq=50,num_std=8):
+def filter(df,fs=2000,lowcut=20,highcut=500,notch_freq=50,kernel_size=3):
     '''
     fs: Frecuencia de muestreo en Hz
     lowcut: Para eliminar frecuencias inferiores al valor espeificado
@@ -256,7 +256,7 @@ def filter(df,fs=2000,lowcut=15,highcut=500,notch_freq=50,num_std=8):
     '''
     functions = [(ff.butter_bandpass, {'lowcut': lowcut, 'highcut': highcut, 'fs': fs}),
                 (ff.apply_notch_filter, {'notch_freq': notch_freq, 'fs': fs}),
-                (ff.replace_outliers_with_threshold, {'num_std': num_std}),]
+                (ff.apply_median_filter, {'kernel_size': kernel_size}),]
     Stimulus = df.iloc[:, -1]  # Última columna (el tipo de agarre)
     df = df.iloc[:, :-1]  # Todas las columnas excepto la última
     dim = df.shape
@@ -269,33 +269,66 @@ def filter(df,fs=2000,lowcut=15,highcut=500,notch_freq=50,num_std=8):
 
 #---------------------------------------------------------------------------------
 
-def gen_carac(df):
+def pre_normalize(df, scaler=None):
+    """
+    Normaliza las señales EMG contenidas en un DataFrame, separando características y estímulos.
+
+    Args:
+        df: DataFrame donde las columnas de características contienen señales EMG (pd.Series, listas o arrays),
+            y la última columna contiene el estímulo.
+
+    Returns:
+        DataFrame con señales normalizadas y estímulos conservados.
+    """
+    # Separar características (señales EMG) y estímulos
+    emg_features = df.iloc[:, :-1]
+    emg_stimulus = df.iloc[:, -1]
+
+    # Inicializar un DataFrame vacío para almacenar las características normalizadas
+    emg_features_normalized = pd.DataFrame(index=emg_features.index)
+
+    # Normalizar cada columna de características
+    if not scaler:
+        scaler_std = StandardScaler()
+    
+    for col in emg_features.columns:
+        normalized_signals = []
+        for signal in emg_features[col]:
+            # Convertir la señal a array si es pd.Series
+            if isinstance(signal, pd.Series):
+                signal = signal.to_numpy()
+            elif isinstance(signal, (list, np.ndarray)):
+                signal = np.array(signal)
+            else:
+                raise ValueError(f"Celda en la columna '{col}' no contiene una señal válida.")
+
+            # Normalizar la señal individualmente
+            signal = signal.reshape(-1, 1)  # Convertir a 2D para StandardScaler
+            if not scaler:
+                normalized_signal = scaler_std.fit_transform(signal).flatten()
+            else:
+                normalized_signal = scaler.transform(signal).flatten()
+            normalized_signals.append(pd.Series(normalized_signal))
+
+        # Guardar las señales normalizadas en la columna correspondiente
+        emg_features_normalized[col] = normalized_signals
+
+    # Concatenar las características normalizadas con el estímulo
+    df_normalized = pd.concat([emg_features_normalized, emg_stimulus], axis=1)
+
+    if not scaler:
+        return scaler_std, df_normalized
+    else:
+        return df_normalized
+
+#--------------------------------------------------------------------------------------
+
+def gen_carac(df, feature_funcs):
     stimulus_data = df.iloc[:, -1]  # Última columna (el tipo de agarre)
     smeg_preprocess_data = df.iloc[:, :-1]  # Todas las columnas excepto la última
 
     smeg_dim = smeg_preprocess_data.shape
 
-    # Características que pueden extraerse
-    feature_funcs = {
-      #'rms': ff.rms,
-      #'iemg': ff.iemg,
-      #'mav': ff.mav,
-      #'wl': ff.wl,
-      #'log_detec': ff.log_detec,
-      #'ssi': ff.ssi,
-      'fft': ff.fast_fourier_trans,
-      'psd': ff.power_spect_dens,
-      'mf': ff.mean_frequency,
-      'mdf': ff.mdf,
-      'zc': ff.zc,
-      #'var': ff.var,
-      'ssc': ff.ssc,
-      #'stft': ff.stft_features,
-      #'cwt': ff.cwt_features,
-      'df': ff.dominant_frequency,
-      'sk': ff.spectral_kurtosis,
-      'br': ff.band_ratio,
-    }
     # Creamos un dataframe con columnas para cada característica y sensor
     sensor_count = smeg_dim[1]  # Cantidad de sensores (número de columnas del dataframe original)
     feature_names = list(feature_funcs.keys())  # Nombres de las características a extraer
@@ -331,82 +364,77 @@ def gen_carac(df):
 
     return features_data
 
+#-------------------------------------------------------------------------------------------
+
+def get_carac(df, scaler=None):
+    time_features = {
+      'rms': ff.rms,
+      'iemg': ff.iemg,
+      'mav': ff.mav,
+      'wl': ff.wl,
+      #'log_detec': ff.log_detec,
+      #'ssi': ff.ssi,
+    }
+
+    time_df = gen_carac(df, time_features)
+
+    # Características que pueden extraerse
+    spectral_features = {
+      'fft': ff.fast_fourier_trans,
+      'psd': ff.power_spect_dens,
+      'mf': ff.mean_frequency,
+      'mdf': ff.mdf,
+      'zc': ff.zc,
+      
+      'ssc': ff.ssc,
+      #'stft': ff.stft_features,
+      #'cwt': ff.cwt_features,
+      'df': ff.dominant_frequency,
+      'sk': ff.spectral_kurtosis,
+      'br': ff.band_ratio,
+    }
+
+    if not scaler:
+        scaler_std, pre_spect_df = pre_normalize(df)
+    else:
+        pre_spect_df = pre_normalize(df, scaler)
+
+    spect_df = gen_carac(df, spectral_features)
+
+    del pre_spect_df
+
+    result = pd.concat([time_df, spect_df], axis=1)
+
+    if not scaler:
+        return scaler_std, result
+    else:
+        return result
+
 #---------------------------------------------------------------------------------
 
-def pre_normalize(df):
-    """
-    Normaliza las señales EMG contenidas en un DataFrame, separando características y estímulos.
-
-    Args:
-        df: DataFrame donde las columnas de características contienen señales EMG (pd.Series, listas o arrays),
-            y la última columna contiene el estímulo.
-
-    Returns:
-        DataFrame con señales normalizadas y estímulos conservados.
-    """
-    # Separar características (señales EMG) y estímulos
-    emg_features = df.iloc[:, :-1]
-    emg_stimulus = df.iloc[:, -1]
-
-    # Inicializar un DataFrame vacío para almacenar las características normalizadas
-    emg_features_normalized = pd.DataFrame(index=emg_features.index)
-
-    # Normalizar cada columna de características
-    scaler = StandardScaler()
-    for col in emg_features.columns:
-        normalized_signals = []
-        for signal in emg_features[col]:
-            # Convertir la señal a array si es pd.Series
-            if isinstance(signal, pd.Series):
-                signal = signal.to_numpy()
-            elif isinstance(signal, (list, np.ndarray)):
-                signal = np.array(signal)
-            else:
-                raise ValueError(f"Celda en la columna '{col}' no contiene una señal válida.")
-
-            # Normalizar la señal individualmente
-            signal = signal.reshape(-1, 1)  # Convertir a 2D para StandardScaler
-            normalized_signal = scaler.fit_transform(signal).flatten()
-            normalized_signals.append(pd.Series(normalized_signal))
-
-        # Guardar las señales normalizadas en la columna correspondiente
-        emg_features_normalized[col] = normalized_signals
-
-    # Concatenar las características normalizadas con el estímulo
-    df_normalized = pd.concat([emg_features_normalized, emg_stimulus], axis=1)
-
-    return df_normalized
-
-def normalize(df):
+def normalize(df, scaler=None):
     emg_features = df.iloc[:, :-1]
     emg_stimulus = df.iloc[:, -1]
     # Inicializamos el estandarizador para hacer Z-score
-    scaler = StandardScaler()
+    if not scaler:
+        scaler_std = StandardScaler()
     # Estandarizamos las columnas de características
-    emg_features_normalized = scaler.fit_transform(emg_features)
+    if not scaler:
+        emg_features_normalized = scaler_std.fit_transform(emg_features)
+    else:
+        emg_features_normalized = scaler.transform(emg_features)
+
     # Convertimos las características normalizadas de nuevo a DataFrame, conservando las columnas originales
     emg_features_normalized = pd.DataFrame(emg_features_normalized, columns=emg_features.columns, index=emg_features.index)
     # Añadimos la columna de 'stimulus' nuevamente al DataFrame normalizado
     df_normalized = pd.concat([emg_features_normalized, emg_stimulus], axis=1)
     
-    return scaler, df_normalized
+    if not scaler:
+        return scaler_std, df_normalized
+    else:
+        return df_normalized
 
-def normalize_test_data(scaler, df_test):
-    # Separar características y estímulos del conjunto de testeo
-    emg_features_test = df_test.iloc[:, :-1]
-    emg_stimulus_test = df_test.iloc[:, -1]
-    
-    # Normalizar las características del conjunto de testeo utilizando el scaler entrenado
-    emg_features_test_normalized = scaler.transform(emg_features_test)
-    
-    # Convertir las características normalizadas de nuevo a DataFrame
-    emg_features_test_normalized = pd.DataFrame(emg_features_test_normalized, columns=emg_features_test.columns, index=emg_features_test.index)
-    
-    # Añadir la columna de 'stimulus' nuevamente al DataFrame normalizado
-    df_test_normalized = pd.concat([emg_features_test_normalized, emg_stimulus_test], axis=1)
-    
-    return df_test_normalized
-
+#---------------------------------------------------------------------------------
 
 def balance(dataframe):
     # Contar el número de filas por categoría en 'stimulus'

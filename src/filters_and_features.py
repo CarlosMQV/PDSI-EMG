@@ -1,7 +1,7 @@
 import pywt
 import numpy as np
 import pandas as pd
-from scipy.signal import butter, filtfilt, iirnotch
+from scipy.signal import butter, filtfilt, iirnotch, medfilt
 from scipy import signal
 from scipy.fftpack import fft, fftfreq
 
@@ -45,6 +45,22 @@ def apply_notch_filter(data, notch_freq, fs, quality_factor=30):
   b, a = iirnotch(notch, quality_factor)
   result = pd.Series(filtfilt(b, a, data), index=data.index, name=data.name)
   return result
+
+def apply_median_filter(data, kernel_size=3):
+  """
+  Aplica un filtro de mediana a los datos para eliminar valores anormales.
+
+  Parámetros:
+  data (pd.Series): Datos a filtrar.
+  kernel_size (int): Tamaño de la ventana del filtro de mediana, por defecto es 3.
+
+  Devuelve:
+  pd.Series: La serie filtrada con el mismo índice y nombre que los datos de entrada.
+  """
+  filtered_data = medfilt(data, kernel_size=kernel_size)
+  result = pd.Series(filtered_data, index=data.index, name=data.name)
+  return result
+
 
 def replace_outliers_with_threshold(series_data, num_std):
   """
