@@ -245,7 +245,7 @@ def create_df_block(df):
 
 #---------------------------------------------------------------------------------
 
-def filter(df,fs=2000,lowcut=20,highcut=500,notch_freq=50,kernel_size=3):
+def filter(df,fs=2000,lowcut=20,highcut=500,notch_freq=50,kernel_size=9):
     '''
     fs: Frecuencia de muestreo en Hz
     lowcut: Para eliminar frecuencias inferiores al valor espeificado
