@@ -386,7 +386,7 @@ def get_carac(df):
 
     result = pd.concat([time_df, spect_df, stimulus_data], axis=1)
 
-    return result
+    return result.reset_index(drop=True)
 
 #---------------------------------------------------------------------------------
 
