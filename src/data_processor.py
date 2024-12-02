@@ -269,27 +269,22 @@ def filter(df,fs=2000,lowcut=20,highcut=500,notch_freq=50,kernel_size=9):
 
 #---------------------------------------------------------------------------------
 
-def pre_normalize(df, scaler=None):
+def pre_normalize(emg_features):
     """
     Normaliza las señales EMG contenidas en un DataFrame, separando características y estímulos.
 
     Args:
-        df: DataFrame donde las columnas de características contienen señales EMG (pd.Series, listas o arrays),
-            y la última columna contiene el estímulo.
+        df: DataFrame donde las columnas de características contienen señales EMG (pd.Series, listas o arrays)
 
     Returns:
         DataFrame con señales normalizadas y estímulos conservados.
     """
-    # Separar características (señales EMG) y estímulos
-    emg_features = df.iloc[:, :-1]
-    emg_stimulus = df.iloc[:, -1]
 
     # Inicializar un DataFrame vacío para almacenar las características normalizadas
     emg_features_normalized = pd.DataFrame(index=emg_features.index)
 
     # Normalizar cada columna de características
-    if not scaler:
-        scaler_std = StandardScaler()
+    scaler = StandardScaler()
     
     for col in emg_features.columns:
         normalized_signals = []
@@ -304,29 +299,18 @@ def pre_normalize(df, scaler=None):
 
             # Normalizar la señal individualmente
             signal = signal.reshape(-1, 1)  # Convertir a 2D para StandardScaler
-            if not scaler:
-                normalized_signal = scaler_std.fit_transform(signal).flatten()
-            else:
-                normalized_signal = scaler.transform(signal).flatten()
+
+            normalized_signal = scaler.fit_transform(signal).flatten()
             normalized_signals.append(pd.Series(normalized_signal))
 
         # Guardar las señales normalizadas en la columna correspondiente
         emg_features_normalized[col] = normalized_signals
 
-    # Concatenar las características normalizadas con el estímulo
-    df_normalized = pd.concat([emg_features_normalized, emg_stimulus], axis=1)
-
-    if not scaler:
-        return scaler_std, df_normalized
-    else:
-        return df_normalized
+    return emg_features_normalized
 
 #--------------------------------------------------------------------------------------
 
-def gen_carac(df, feature_funcs):
-    stimulus_data = df.iloc[:, -1]  # Última columna (el tipo de agarre)
-    smeg_preprocess_data = df.iloc[:, :-1]  # Todas las columnas excepto la última
-
+def gen_carac(smeg_preprocess_data, feature_funcs):
     smeg_dim = smeg_preprocess_data.shape
 
     # Creamos un dataframe con columnas para cada característica y sensor
@@ -352,9 +336,6 @@ def gen_carac(df, feature_funcs):
                 feature_name = f'{name}_{j+1}'  # Ej: 'std_1', 'rms_1' para el sensor 1
                 features_row[feature_name] = func(series_data)
 
-        # Añadimos el valor del estímulo correspondiente a esta fila
-        features_row['stimulus'] = stimulus_data[i]
-
         # Añadimos la fila de características al dataframe final
         features_data.loc[len(features_data)] = features_row
 
@@ -366,17 +347,20 @@ def gen_carac(df, feature_funcs):
 
 #-------------------------------------------------------------------------------------------
 
-def get_carac(df, scaler=None):
+def get_carac(df):
+    stimulus_data = df.iloc[:, -1]  # Última columna (el tipo de agarre)
+    smeg_preprocess_data = df.iloc[:, :-1]  # Todas las columnas excepto la última
+
     time_features = {
       'rms': ff.rms,
       'iemg': ff.iemg,
       'mav': ff.mav,
       'wl': ff.wl,
-      #'log_detec': ff.log_detec,
-      #'ssi': ff.ssi,
+      'log_detec': ff.log_detec,
+      'ssi': ff.ssi,
     }
 
-    time_df = gen_carac(df, time_features)
+    time_df = gen_carac(smeg_preprocess_data, time_features)
 
     # Características que pueden extraerse
     spectral_features = {
@@ -394,21 +378,15 @@ def get_carac(df, scaler=None):
       'br': ff.band_ratio,
     }
 
-    if not scaler:
-        scaler_std, pre_spect_df = pre_normalize(df)
-    else:
-        pre_spect_df = pre_normalize(df, scaler)
+    pre_spect_df = pre_normalize(smeg_preprocess_data)
+    del smeg_preprocess_data
 
-    spect_df = gen_carac(df, spectral_features)
-
+    spect_df = gen_carac(pre_spect_df, spectral_features)
     del pre_spect_df
 
-    result = pd.concat([time_df, spect_df], axis=1)
+    result = pd.concat([time_df, spect_df, stimulus_data], axis=1)
 
-    if not scaler:
-        return scaler_std, result
-    else:
-        return result
+    return result
 
 #---------------------------------------------------------------------------------
 
