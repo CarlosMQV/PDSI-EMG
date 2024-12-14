@@ -1,0 +1,8 @@
+venv/
+.vscode/
+src/__pycache__/
+datasets/
+dataframes/
+tests/
+src/data/
+src/models/
